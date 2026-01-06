@@ -22,7 +22,7 @@
 #include "comms/ctran/interfaces/ICtran.h"
 #include "comms/ctran/utils/ArgCheck.h"
 #include "comms/ctran/utils/Checks.h"
-#include "comms/ctran/utils/CudaWrap.h"
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/Debug.h"
 #include "comms/ctran/utils/Exception.h"
 #include "comms/ctran/utils/ExtUtils.h"
@@ -169,7 +169,7 @@ bool CtranIbSingleton::getDevToDmaBufSupport(int cudaDev) {
     // Successful insertion means the device is not in the map. Let us
     // initialize it explicitly.
     result.first->second =
-        (ctran::utils::commCudaLibraryInit() == commSuccess) &&
+        (ctran::utils::commGpuLibraryInit() == commSuccess) &&
         (ctran::utils::dmaBufDriverSupport(cudaDev) == commSuccess);
   }
   return result.first->second;

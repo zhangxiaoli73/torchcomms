@@ -4,7 +4,7 @@
 
 #include "comms/ctran/backends/ib/CtranIb.h"
 #include "comms/ctran/utils/Checks.h"
-#include "comms/ctran/utils/CudaWrap.h"
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/LogInit.h"
 
 namespace {
@@ -18,7 +18,7 @@ void initEnvironment() {
   std::call_once(initOnceFlag, [] {
     ncclCvarInit();
     ctran::logging::initCtranLogging();
-    ctran::utils::commCudaLibraryInit();
+    ctran::utils::commGpuLibraryInit();
   });
 }
 

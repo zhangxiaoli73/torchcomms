@@ -1,7 +1,7 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 #include "comms/utils/MemUtils.h"
 #include "comms/ctran/utils/Checks.h"
-#include "comms/ctran/utils/CudaWrap.h"
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/DevMemType.h"
 
 namespace comms::utils::cumem {
@@ -9,7 +9,7 @@ namespace comms::utils::cumem {
 namespace {
 
 bool isBackedByCuMem(const void* ptr, const int devId) {
-  if (ctran::utils::commCudaLibraryInit() != commSuccess) {
+  if (ctran::utils::commGpuLibraryInit() != commSuccess) {
     return false;
   }
 
