@@ -7,8 +7,8 @@
 #include <mutex>
 
 #ifdef CTRAN_USE_SYCL
-// For SYCL, we don't have direct CUDA equivalents
-// We'll provide stub implementations that return "not supported"
+// For SYCL/Intel GPU, use Level Zero for DMA-BUF support
+#include "comms/ctran/utils/LevelZeroWrap.h"
 #else
 #include "comms/ctran/utils/CudaWrap.h"
 #endif
@@ -17,18 +17,21 @@ namespace ctran::utils {
 
 #ifdef CTRAN_USE_SYCL
 
-// SYCL implementations - mostly stubs for now
-// Transport on Intel GPU will work without GPU Direct RDMA initially
+// SYCL/Intel GPU implementations using Level Zero
 
 static std::once_flag gpuLibraryInitFlag;
 static commResult_t gpuLibraryInitResult = commSystemError;
 
 static commResult_t initGpuLibraryOnce_() {
-    // For SYCL, we don't need special initialization
-    // The SYCL runtime is initialized by PyTorch
-    CLOGF_SUBSYS(INFO, INIT, "SYCL GPU library initialized (no-op)");
-    gpuLibraryInitResult = commSuccess;
-    return commSuccess;
+    // Initialize Level Zero for DMA-BUF support
+    commResult_t result = levelZeroLibraryInit();
+    if (result == commSuccess) {
+        CLOGF_SUBSYS(INFO, INIT, "Intel GPU library initialized with Level Zero");
+    } else {
+        CLOGF_SUBSYS(WARN, INIT, "Failed to initialize Level Zero, DMA-BUF support unavailable");
+    }
+    gpuLibraryInitResult = result;
+    return result;
 }
 
 commResult_t commGpuLibraryInit() {
@@ -41,31 +44,61 @@ bool isCommGpuLibraryInited() {
 }
 
 commResult_t dmaBufDriverSupport(int gpuDev) {
-    // DMA-BUF support for Intel GPU is not yet implemented
-    // This will require Level Zero or SYCL extensions
-    CLOGF_SUBSYS(WARN, INIT, "DMA-BUF not yet supported on Intel GPU/SYCL");
-    return commInternalError;
+    // Check DMA-BUF support via Level Zero
+    return levelZeroDmaBufSupport(gpuDev);
 }
 
 int getCuMemDmaBufFd(
     const void* buf,
     const size_t len,
     bool dataDirectPci) {
-    // Not supported on SYCL yet
-    return -1;
+    // Export DMA-BUF file descriptor via Level Zero
+    // Note: dataDirectPci is NVIDIA-specific, ignored for Intel GPU
+
+    // Try to get device ID from Level Zero memory properties
+    // If that fails, use device 0 as default
+    int deviceId = 0;
+
+    auto& ctx = LevelZeroContext::getInstance();
+    if (ctx.isInitialized()) {
+        ze_memory_allocation_properties_t memProps = {
+            ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+            nullptr};
+        ze_device_handle_t allocDevice = nullptr;
+
+        ze_result_t result = zeMemGetAllocProperties(
+            ctx.getContext(),
+            buf,
+            &memProps,
+            &allocDevice);
+
+        if (result == ZE_RESULT_SUCCESS && allocDevice) {
+            // Find device index
+            for (int i = 0; i < ctx.getDeviceCount(); i++) {
+                if (ctx.getDevice(i) == allocDevice) {
+                    deviceId = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    return getLevelZeroDmaBufFd(buf, len, deviceId);
 }
 
 bool gpuDirectRdmaWithCudaVmmSupported(const int gpuDev) {
-    // GPU Direct RDMA not yet supported on Intel GPU
-    // Will need Level Zero extensions
-    return false;
+    // Check GPU Direct RDMA support via Level Zero
+    return levelZeroGpuDirectRdmaSupported(gpuDev);
 }
 
 bool getCuMemSysSupported() {
+    // Intel GPU uses different memory management
+    // Return false to use standard allocation paths
     return false;
 }
 
 bool isCuMemSupported() {
+    // Intel GPU uses different memory management
     return false;
 }
 

@@ -304,6 +304,10 @@ CtranIb::CtranIb(
     // AMD GPUs always require local flush
     // https://ontrack.amd.com/browse/FBA-633
     enableLocalFlush_ = true;
+#elif defined(CTRAN_USE_SYCL) || defined(USE_INTEL_GPU)
+    // Intel GPUs: disable local flush for now
+    // TODO: Determine if Intel GPUs need local flush
+    enableLocalFlush_ = false;
 #else
     // Turn on flush for NVidia GPUs older than H100
     enableLocalFlush_ = comm->statex_->cudaArch() < 900;
