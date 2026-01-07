@@ -1,8 +1,9 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 #pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+// Use GPU abstraction layer instead of direct CUDA headers
+#include "comms/ctran/utils/GpuWrap.h"
+
 #include <errno.h>
 #include <folly/Format.h>
 

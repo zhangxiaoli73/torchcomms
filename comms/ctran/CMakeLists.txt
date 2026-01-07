@@ -25,6 +25,47 @@ if (NOT DEFINED ENABLE_TCPDM)
     list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/ctran/backends/tcpdevmem/.*")
 endif()
 
+# Exclude CUDA-dependent collective kernel files when building for Intel GPU
+# These files use CUDA-specific headers (cuda_fp16.h, etc.) and GPU kernels
+if(USE_INTEL_GPU)
+    # AllReduce collective kernels
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllReduce/AllReduceDirect\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllReduce/AllReduceARG\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllReduce/AllReduceRing\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllReduce/AllReduceResourceImpl\\.cc$")
+
+    # AllGather collective kernels
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllGather/AllGatherDirect\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllGather/AllGatherBrucksFF\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllGather/AllGatherRecDbl\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllGather/AllGatherRing\\.cc$")
+
+    # AllToAll collective kernels
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAll\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllImpl\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllDedup\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllDedupImpl\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllP\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllPImpl\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllv\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllvDynamic\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllvDynamicCommon\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllvDynamicPImpl\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToAllvDynamicSplit\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAll/AllToallvDynamicSplitNonContig\\.cc$")
+
+    # Other collective kernels
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/ReduceScatter/.*\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/Broadcast/.*\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/SendRecv/.*\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllGatherP/.*\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/AllToAllvDedup/.*\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/RMA/.*\\.cc$")
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/CudaGraphUtilsImpl\\.cc$")
+
+    message(STATUS "Excluding CUDA-dependent collective kernel files from ctran for Intel GPU build")
+endif()
+
 if(NOT USE_INTEL_GPU)
     list(FILTER CMAKE_CUDA_FLAGS EXCLUDE REGEX ".*arch=compute_50,code=sm_50")
     list(FILTER CMAKE_CUDA_FLAGS EXCLUDE REGEX ".*arch=compute_60,code=sm_60")

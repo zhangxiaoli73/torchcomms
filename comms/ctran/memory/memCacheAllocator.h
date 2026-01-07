@@ -1,7 +1,7 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 #pragma once
 
-#include <cuda.h>
+#include "comms/ctran/utils/GpuWrap.h"
 #include <sched.h>
 #include <cstdint>
 #include <deque>

@@ -2,7 +2,7 @@
 
 #include "comms/ctran/utils/LogInit.h"
 
-#include <cuda_runtime.h>
+#include "comms/ctran/utils/GpuWrap.h"
 
 #include <folly/synchronization/CallOnce.h>
 

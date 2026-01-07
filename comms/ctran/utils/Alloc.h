@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include <cuda.h>
 #include <folly/ScopeGuard.h>
 
 #include "comms/ctran/utils/Checks.h"
-#include "comms/ctran/utils/CudaWrap.h"
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/DevUtils.cuh"
 #include "comms/utils/commSpecs.h"
 #include "comms/utils/cvars/nccl_cvars.h"

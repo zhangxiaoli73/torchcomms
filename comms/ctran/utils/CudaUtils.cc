@@ -1,13 +1,11 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
-#include <cuda.h>
-#include <cuda_runtime.h>
 #include <folly/Singleton.h>
 #include <folly/SocketAddress.h>
 #include <folly/logging/xlog.h>
 
 #include "comms/ctran/utils/CudaUtils.h"
-
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/Checks.h"
 
 namespace ctran::utils {

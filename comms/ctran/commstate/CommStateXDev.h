@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <cuda.h>
+#include "comms/ctran/utils/GpuWrap.h"
 #include <stdint.h>
 #include "comms/ctran/utils/DevAttribute.h"
 

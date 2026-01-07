@@ -23,6 +23,12 @@ commResult_t ctranAllReduce(
     cudaStream_t stream,
     std::optional<const enum NCCL_ALLREDUCE_ALGO> algoSpecified,
     std::optional<std::chrono::milliseconds> timeout) {
+#if defined(USE_INTEL_GPU)
+  // Intel GPU build: collective kernels are not available
+  // Only transport layer is built for RDMA support
+  CLOGF(ERROR, "ctranAllReduce: collective kernels not available in Intel GPU build");
+  return commInternalError;
+#else
   // Use global config if user doesn't provide specific algo per collective
   auto algo = algoSpecified.value_or(NCCL_ALLREDUCE_ALGO);
 
@@ -57,4 +63,5 @@ commResult_t ctranAllReduce(
       return ctranAllReduceDirect(
           sendbuff, recvbuff, count, datatype, redOp, comm, stream, timeout);
   }
+#endif
 }

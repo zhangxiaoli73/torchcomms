@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include "comms/ctran/utils/GpuWrap.h"
 #include <fmt/format.h>
 #include <optional>
 #include <string>

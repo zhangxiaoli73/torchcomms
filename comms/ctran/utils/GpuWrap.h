@@ -15,8 +15,17 @@
     // SYCL headers will be included separately where needed
     // to avoid polluting the namespace
 
-    // Provide stub CUDA runtime functions for SYCL
+    // Provide stub CUDA runtime types and functions for SYCL
     // These are no-ops for SYCL since PyTorch manages device context
+
+    // CUDA runtime error type
+    typedef int cudaError_t;
+
+    // Define CUDA error codes for compatibility
+    #define cudaSuccess 0
+    #define cudaErrorInvalidValue 1
+
+    // Stub CUDA runtime functions
     inline int cudaGetDevice(int* device) {
         if (device) *device = 0;  // Default to device 0
         return 0;  // cudaSuccess
@@ -27,14 +36,35 @@
         return 0;  // cudaSuccess
     }
 
-    // Define CUDA error codes for compatibility
-    #define cudaSuccess 0
-    #define cudaErrorInvalidValue 1
+    inline const char* cudaGetErrorString(cudaError_t error) {
+        (void)error;
+        return "SYCL stub - no error";
+    }
+
+    inline cudaError_t cudaGetLastError() {
+        return cudaSuccess;
+    }
 
     // Define CUDA driver API types for compatibility
     typedef unsigned long long CUdeviceptr;
     typedef int CUdevice;
     typedef int CUresult;
+    typedef unsigned long long CUmemGenericAllocationHandle;
+    typedef void* cudaStream_t;
+
+    // Stub structure for memory allocation properties
+    struct CUmemAllocationProp {
+        int type;
+        int requestedHandleTypes;
+        unsigned long long location;
+        void* win32HandleMetaData;
+        struct {
+            unsigned char compressionType;
+            unsigned char gpuDirectRDMACapable;
+            unsigned short usage;
+        } allocFlags;
+    };
+
     #define CUDA_SUCCESS 0
 
     // Stub CUDA driver API functions

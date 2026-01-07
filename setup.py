@@ -94,13 +94,21 @@ class build_ext(build_ext_orig):
         cfg = os.environ.get("CMAKE_BUILD_TYPE", "RelWithDebInfo")
         print(f"- Building with {cfg} configuration")
 
+        # Build CMAKE_PREFIX_PATH to include both TORCH_ROOT and CONDA_PREFIX
+        cmake_prefix_paths = [TORCH_ROOT]
+        conda_prefix = os.environ.get("CONDA_PREFIX")
+        if conda_prefix:
+            cmake_prefix_paths.append(conda_prefix)
+            print(f"- Using CONDA_PREFIX: {conda_prefix}")
+        cmake_prefix_path = ";".join(cmake_prefix_paths)
+
         cmake_args = [
             f"-DCMAKE_BUILD_TYPE={cfg}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir.parent.absolute()}",
             f"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY={extdir.parent.absolute()}",
             f"-DCMAKE_INSTALL_PREFIX={extdir.parent.absolute()}",
             f"-DCMAKE_INSTALL_DIR={extdir.parent.absolute()}",
-            f"-DCMAKE_PREFIX_PATH={TORCH_ROOT}",
+            f"-DCMAKE_PREFIX_PATH={cmake_prefix_path}",
             f"-DCMAKE_CXX_FLAGS={shlex.quote(' '.join(pybind11_build_flags))}",
             f"-DPython3_EXECUTABLE={sys.executable}",
             f"-DLIB_SUFFIX={os.environ.get('LIB_SUFFIX', 'lib')}",

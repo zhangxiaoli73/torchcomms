@@ -49,6 +49,12 @@ commResult_t ctranAllGather(
     CtranComm* comm,
     cudaStream_t stream,
     enum NCCL_ALLGATHER_ALGO algo) {
+#if defined(USE_INTEL_GPU)
+  // Intel GPU build: collective kernels are not available
+  // Only transport layer is built for RDMA support
+  CLOGF(ERROR, "ctranAllGather: collective kernels not available in Intel GPU build");
+  return commInternalError;
+#else
   const auto statex = comm->statex_.get();
 
   // Only ctdirect supports nLocalRanks>1 case.
@@ -83,6 +89,7 @@ commResult_t ctranAllGather(
       return ctranAllGatherDirect(
           sendbuff, recvbuff, sendcount, datatype, comm, stream);
   }
+#endif
 }
 
 // Util method for preparing out-of-place and small msg sizes before allgather

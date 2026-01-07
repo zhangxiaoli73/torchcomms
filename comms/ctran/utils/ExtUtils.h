@@ -2,8 +2,7 @@
 #ifndef EXT_UTILS_H
 #define EXT_UTILS_H
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include "comms/ctran/utils/GpuWrap.h"
 #include <folly/SocketAddress.h>
 #include <folly/container/F14Map.h>
 #include <netinet/in.h>

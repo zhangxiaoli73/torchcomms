@@ -36,12 +36,80 @@ find_package(Torch REQUIRED)
 # Set CMAKE_PREFIX_PATH to include CONDA_PREFIX for finding packages
 if(DEFINED ENV{CONDA_PREFIX})
     list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
+    # Also add common CMake config locations
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}/lib/cmake")
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}/lib64/cmake")
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}/share/cmake")
 endif()
 
-# Find glog, gflags, and fmt using CONFIG mode
-find_package(glog CONFIG)
-find_package(gflags CONFIG)
-find_package(fmt CONFIG)
+# Try to find packages using CONFIG mode (looks for *Config.cmake files)
+# QUIET means don't error if not found, we'll handle it gracefully
+find_package(glog CONFIG QUIET)
+find_package(gflags CONFIG QUIET)
+find_package(fmt CONFIG QUIET)
+
+# If CONFIG mode fails, try to create imported targets manually
+# This handles cases where conda packages don't provide CMake config files
+if(NOT TARGET glog::glog AND DEFINED ENV{CONDA_PREFIX})
+    find_library(GLOG_LIBRARY NAMES glog PATHS "$ENV{CONDA_PREFIX}/lib" NO_DEFAULT_PATH)
+    find_path(GLOG_INCLUDE_DIR NAMES glog/logging.h PATHS "$ENV{CONDA_PREFIX}/include" NO_DEFAULT_PATH)
+
+    if(GLOG_LIBRARY AND GLOG_INCLUDE_DIR)
+        add_library(glog::glog UNKNOWN IMPORTED)
+        set_target_properties(glog::glog PROPERTIES
+            IMPORTED_LOCATION "${GLOG_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GLOG_INCLUDE_DIR}"
+        )
+        message(STATUS "Created glog::glog imported target from: ${GLOG_LIBRARY}")
+    endif()
+endif()
+
+if(NOT TARGET gflags::gflags AND DEFINED ENV{CONDA_PREFIX})
+    find_library(GFLAGS_LIBRARY NAMES gflags PATHS "$ENV{CONDA_PREFIX}/lib" NO_DEFAULT_PATH)
+    find_path(GFLAGS_INCLUDE_DIR NAMES gflags/gflags.h PATHS "$ENV{CONDA_PREFIX}/include" NO_DEFAULT_PATH)
+
+    if(GFLAGS_LIBRARY AND GFLAGS_INCLUDE_DIR)
+        add_library(gflags::gflags UNKNOWN IMPORTED)
+        set_target_properties(gflags::gflags PROPERTIES
+            IMPORTED_LOCATION "${GFLAGS_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GFLAGS_INCLUDE_DIR}"
+        )
+        message(STATUS "Created gflags::gflags imported target from: ${GFLAGS_LIBRARY}")
+    endif()
+endif()
+
+if(NOT TARGET fmt::fmt AND DEFINED ENV{CONDA_PREFIX})
+    find_library(FMT_LIBRARY NAMES fmt PATHS "$ENV{CONDA_PREFIX}/lib" NO_DEFAULT_PATH)
+    find_path(FMT_INCLUDE_DIR NAMES fmt/core.h PATHS "$ENV{CONDA_PREFIX}/include" NO_DEFAULT_PATH)
+
+    if(FMT_LIBRARY AND FMT_INCLUDE_DIR)
+        add_library(fmt::fmt UNKNOWN IMPORTED)
+        set_target_properties(fmt::fmt PROPERTIES
+            IMPORTED_LOCATION "${FMT_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${FMT_INCLUDE_DIR}"
+        )
+        message(STATUS "Created fmt::fmt imported target from: ${FMT_LIBRARY}")
+    endif()
+endif()
+
+# Print what we found
+if(TARGET glog::glog)
+    message(STATUS "✓ glog::glog target is available")
+else()
+    message(STATUS "✗ glog::glog target not available, will use fallback")
+endif()
+
+if(TARGET gflags::gflags)
+    message(STATUS "✓ gflags::gflags target is available")
+else()
+    message(STATUS "✗ gflags::gflags target not available, will use fallback")
+endif()
+
+if(TARGET fmt::fmt)
+    message(STATUS "✓ fmt::fmt target is available")
+else()
+    message(STATUS "✗ fmt::fmt target not available, will use fallback")
+endif()
 
 
 # Helper to glob sources
@@ -89,7 +157,10 @@ target_include_directories(torchcomms PRIVATE
     ${Python3_INCLUDE_DIRS}
 )
 target_compile_features(torchcomms PRIVATE cxx_std_20)
-target_compile_definitions(torchcomms PRIVATE GLOG_NO_ABBREVIATED_SEVERITIES)
+target_compile_definitions(torchcomms PRIVATE
+    GLOG_NO_ABBREVIATED_SEVERITIES
+    GLOG_USE_GLOG_EXPORT
+)
 target_link_libraries(torchcomms PRIVATE ${TORCH_LIBRARIES})
 
 # Link dependencies using modern CMake targets

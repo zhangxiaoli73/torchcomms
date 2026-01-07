@@ -1,9 +1,7 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
-#include <cuda_runtime.h>
-
 #include "comms/ctran/utils/Checks.h"
-#include "comms/ctran/utils/CudaWrap.h"
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/DevMemType.h"
 
 commResult_t

@@ -1,13 +1,17 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 #pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/ctran/utils/Checks.h"
+
+// CUDA Graph utilities - only available for CUDA/HIP, not SYCL
+#if !defined(CTRAN_USE_SYCL)
+#include <cuda_runtime_api.h>
+#endif
 
 namespace ctran::utils::cudagraph {
 
+#if !defined(CTRAN_USE_SYCL)
 struct StreamCaptureInfo {
   cudaStreamCaptureStatus status;
   unsigned long long id;
@@ -53,4 +57,6 @@ inline commResult_t addHostNode(
       cudaGraphRetainUserObject(info.g, object, 1, cudaGraphUserObjectMove));
   return commSuccess;
 }
+#endif // !defined(CTRAN_USE_SYCL)
+
 } // namespace ctran::utils::cudagraph

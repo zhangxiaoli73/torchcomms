@@ -3,9 +3,7 @@
 
 #include <vector>
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/utils/commSpecs.h"
 
 namespace ncclx::memory {

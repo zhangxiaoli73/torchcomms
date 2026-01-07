@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <cuda.h>
-
+#include "comms/ctran/utils/GpuWrap.h"
 #include "comms/utils/commSpecs.h"
 
 enum DevMemType {
