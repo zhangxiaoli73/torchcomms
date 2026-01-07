@@ -54,6 +54,14 @@ else()
   set(CONDA_PREFIX "${ROOT}/build/conda")
   set(ENV{CONDA_PREFIX} "${CONDA_PREFIX}")
 endif()
+
+# Set LIB_SUFFIX (default to "lib", can be overridden by environment)
+if(DEFINED ENV{LIB_SUFFIX})
+  set(LIB_SUFFIX $ENV{LIB_SUFFIX})
+else()
+  set(LIB_SUFFIX "lib")
+endif()
+
 set(CONDA_LIB "${CONDA_PREFIX}/${LIB_SUFFIX}")
 set(CONDA_INCLUDE "${CONDA_PREFIX}/include")
 set(TORCH_PYTHON_LIB "${TORCH_INSTALL_PREFIX}/lib/libtorch_python.so")
@@ -70,6 +78,7 @@ target_include_directories(torchcomms PRIVATE
     ${Python3_INCLUDE_DIRS}
 )
 target_compile_features(torchcomms PRIVATE cxx_std_20)
+target_compile_definitions(torchcomms PRIVATE GLOG_NO_ABBREVIATED_SEVERITIES)
 target_link_directories(torchcomms PRIVATE ${CONDA_LIB})
 target_link_libraries(torchcomms PRIVATE ${TORCH_LIBRARIES})
 if(USE_SYSTEM_LIBS)

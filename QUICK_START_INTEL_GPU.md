@@ -26,10 +26,17 @@ sudo apt-get install level-zero level-zero-dev
 # InfiniBand开发库
 sudo apt-get install libibverbs-dev
 
+# Folly和其他依赖（通过conda）
+conda install -c conda-forge folly glog gflags fmt boost
+
+# 或者设置USE_SYSTEM_LIBS=1使用系统库
+export USE_SYSTEM_LIBS=1
+
 # 验证安装
 ls /usr/include/level_zero/ze_api.h
 ldconfig -p | grep libze_loader
 ldconfig -p | grep libibverbs
+pkg-config --libs libfolly  # 检查folly
 ```
 
 ### PyTorch XPU
@@ -121,6 +128,35 @@ infiniband/verbs.h: No such file or directory
 **解决**:
 ```bash
 sudo apt-get install libibverbs-dev
+```
+
+### 问题5: pkg-config找不到libfolly
+
+**错误**:
+```
+Package libfolly was not found in the pkg-config search path
+```
+
+**解决方案A** - 使用conda安装folly:
+```bash
+conda install -c conda-forge folly glog gflags fmt boost
+```
+
+**解决方案B** - 使用系统库:
+```bash
+export USE_SYSTEM_LIBS=1
+pip install --no-build-isolation -v -e .
+```
+
+**解决方案C** - 手动设置PKG_CONFIG_PATH:
+```bash
+# 如果folly安装在自定义位置
+export PKG_CONFIG_PATH=/path/to/folly/lib/pkgconfig:$PKG_CONFIG_PATH
+```
+
+**验证**:
+```bash
+pkg-config --libs libfolly
 ```
 
 ## 运行时配置

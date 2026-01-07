@@ -34,7 +34,12 @@ pip install --no-build-isolation -v -e .
    sudo apt-get install libibverbs-dev
    ```
 
-3. **PyTorch with XPU support**
+3. **Folly和依赖库**
+   ```bash
+   conda install -c conda-forge folly glog gflags fmt boost
+   ```
+
+4. **PyTorch with XPU support**
    - Intel Extension for PyTorch
 
 ## 已实现的功能
@@ -114,6 +119,26 @@ if (dmaBufFd != -1) {
 }
 ```
 
+## 已知构建问题
+
+### ✅ 已修复: pkg-config找不到libfolly
+
+**错误**:
+```
+Package libfolly was not found in the pkg-config search path
+```
+
+**修复**:
+1. 修复了`CMakeLists.txt`中`LIB_SUFFIX`未定义的问题
+2. 在`comms/torchcomms/transport/CMakeLists.txt`中添加了folly查找回退机制
+
+**解决方案**: 安装folly
+```bash
+conda install -c conda-forge folly glog gflags fmt boost
+```
+
+详见: `FOLLY_DEPENDENCY_FIX.md`
+
 ## 运行时限制
 
 ### ⚠️ PyTorch XPU Allocator问题
@@ -161,6 +186,9 @@ print("✓ Level Zero loaded")
 
 ## 文档
 
+- **`QUICK_START_INTEL_GPU.md`** - 快速开始指南
+- **`INTEL_GPU_BUILD_FIX.md`** - CUDA依赖问题修复
+- **`FOLLY_DEPENDENCY_FIX.md`** - Folly依赖问题修复
 - **`INTEL_GPU_BUILD_CHECKLIST.md`** - 详细的构建检查清单
 - **`INTEL_GPU_RDMA_SETUP.md`** - 完整的设置和故障排查指南
 - **`test_intel_gpu_build.sh`** - 自动化构建测试脚本

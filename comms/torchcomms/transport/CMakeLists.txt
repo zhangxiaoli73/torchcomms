@@ -56,11 +56,28 @@ execute_process(
     RESULT_VARIABLE PKG_RESULT
 )
 if(NOT PKG_RESULT EQUAL 0)
-    message(FATAL_ERROR "pkg-config for libfolly failed")
+    message(WARNING "pkg-config for libfolly failed. Trying fallback...")
+    message(STATUS "CONDA_LIB: ${CONDA_LIB}")
+    message(STATUS "PKG_CONFIG_PATH: $ENV{PKG_CONFIG_PATH}")
+
+    # Fallback: manually construct folly link flags
+    if(USE_SYSTEM_LIBS)
+        set(FOLLY_LDFLAGS "-lfolly")
+    else()
+        # Try to find libfolly.a directly
+        find_library(FOLLY_LIB NAMES libfolly.a folly PATHS ${CONDA_LIB} NO_DEFAULT_PATH)
+        if(FOLLY_LIB)
+            message(STATUS "Found folly library: ${FOLLY_LIB}")
+            set(FOLLY_LDFLAGS "${FOLLY_LIB}")
+        else()
+            message(FATAL_ERROR "Cannot find folly library. Please install folly or set USE_SYSTEM_LIBS=1")
+        endif()
+    endif()
+else()
+    separate_arguments(FOLLY_LDFLAGS NATIVE_COMMAND "${FOLLY_LDFLAGS_RAW}")
+    # Remove any -l:libglog.a from FOLLY_LDFLAGS
+    list(FILTER FOLLY_LDFLAGS EXCLUDE REGEX ".*libglog.*")
 endif()
-separate_arguments(FOLLY_LDFLAGS NATIVE_COMMAND "${FOLLY_LDFLAGS_RAW}")
-# Remove any -l:libglog.a from FOLLY_LDFLAGS
-list(FILTER FOLLY_LDFLAGS EXCLUDE REGEX ".*libglog.*")
 
 add_library(torchcomms_transport MODULE
     ${TORCHCOMMS_TRANSPORT_SOURCES}

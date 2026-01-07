@@ -3,6 +3,12 @@
 #pragma once
 
 #include <fmt/core.h>
+
+// Define this before including glog to avoid macro conflicts
+#ifndef GLOG_NO_ABBREVIATED_SEVERITIES
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#endif
+
 #include <glog/logging.h>
 
 #include "comms/torchcomms/TorchCommBackend.hpp"
@@ -107,19 +113,26 @@ inline std::string getRankPrefix(torch::comms::TorchCommBackend* comm) {
 // declaring it here. This is a hack but has been used by a bunch of others too
 // (e.g. Torch).
 // Copied from https://fburl.com/code/tu9hg6gf
-namespace google::glog_internal_namespace_ {
+#ifndef _WIN32
+namespace google {
+namespace glog_internal_namespace_ {
 bool IsGoogleLoggingInitialized();
-} // namespace google::glog_internal_namespace_
+} // namespace glog_internal_namespace_
+void InitGoogleLogging(const char* argv0);
+void InstallFailureSignalHandler();
+} // namespace google
+#endif
 
 namespace {
 
 void tryTorchCommLoggingInit(std::string_view name) {
+#ifndef _WIN32
   // This trick can only be used on UNIX platforms
   if (!::google::glog_internal_namespace_::IsGoogleLoggingInitialized()) {
     ::google::InitGoogleLogging(name.data());
-    // This is never defined on Windows
     ::google::InstallFailureSignalHandler();
   }
+#endif
 }
 
 torch::comms::TorchCommBackend* getDefaultCommunicator() {
