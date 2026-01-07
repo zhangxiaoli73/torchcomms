@@ -74,7 +74,6 @@ target_include_directories(torchcomms_comms_ncclx PRIVATE
     ${Python3_INCLUDE_DIRS}
 )
 target_compile_features(torchcomms_comms_ncclx PRIVATE cxx_std_20)
-target_link_directories(torchcomms_comms_ncclx PRIVATE ${CONDA_LIB})
 target_link_libraries(torchcomms_comms_ncclx PRIVATE
     ${TORCH_LIBRARIES}
     ${TORCH_PYTHON_LIB}
@@ -83,9 +82,16 @@ target_link_libraries(torchcomms_comms_ncclx PRIVATE
 if(USE_SYSTEM_LIBS)
     target_link_libraries(torchcomms_comms_ncclx PRIVATE
         ${NCCLX_SHARED_LIB}
-        "-lfmt"
     )
+    # Link fmt using CMake target if available
+    if(TARGET fmt::fmt)
+        target_link_libraries(torchcomms_comms_ncclx PRIVATE fmt::fmt)
+    else()
+        target_link_directories(torchcomms_comms_ncclx PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms_comms_ncclx PRIVATE "-lfmt")
+    endif()
 else()
+    target_link_directories(torchcomms_comms_ncclx PRIVATE ${CONDA_LIB})
     target_link_libraries(torchcomms_comms_ncclx PRIVATE
         ${NCCLX_STATIC_LIB}
         "-l:libcomms_tracing_service.a"

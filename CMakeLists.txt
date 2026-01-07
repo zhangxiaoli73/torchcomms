@@ -32,6 +32,17 @@ message(STATUS "TORCH_CUDA_ARCH_LIST : ${TORCH_CUDA_ARCH_LIST}")
 find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(Torch REQUIRED)
 
+# Find dependencies using CONFIG mode for modern CMake targets
+# Set CMAKE_PREFIX_PATH to include CONDA_PREFIX for finding packages
+if(DEFINED ENV{CONDA_PREFIX})
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
+endif()
+
+# Find glog, gflags, and fmt using CONFIG mode
+find_package(glog CONFIG)
+find_package(gflags CONFIG)
+find_package(fmt CONFIG)
+
 
 # Helper to glob sources
 file(GLOB TORCHCOMMS_SOURCES "comms/torchcomms/*.cpp")
@@ -79,18 +90,37 @@ target_include_directories(torchcomms PRIVATE
 )
 target_compile_features(torchcomms PRIVATE cxx_std_20)
 target_compile_definitions(torchcomms PRIVATE GLOG_NO_ABBREVIATED_SEVERITIES)
-target_link_directories(torchcomms PRIVATE ${CONDA_LIB})
 target_link_libraries(torchcomms PRIVATE ${TORCH_LIBRARIES})
+
+# Link dependencies using modern CMake targets
 if(USE_SYSTEM_LIBS)
-    target_link_libraries(torchcomms PRIVATE
-        "-lglog"
-        "-lgflags"
-        "-lfmt"
-    )
+    # Use shared libraries with CMake targets
+    if(TARGET glog::glog)
+        target_link_libraries(torchcomms PRIVATE glog::glog)
+    else()
+        target_link_directories(torchcomms PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms PRIVATE "-lglog")
+    endif()
+
+    if(TARGET gflags::gflags)
+        target_link_libraries(torchcomms PRIVATE gflags::gflags)
+    else()
+        target_link_directories(torchcomms PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms PRIVATE "-lgflags")
+    endif()
+
+    if(TARGET fmt::fmt)
+        target_link_libraries(torchcomms PRIVATE fmt::fmt)
+    else()
+        target_link_directories(torchcomms PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms PRIVATE "-lfmt")
+    endif()
 else()
+    # Use static libraries
     target_include_directories(torchcomms PRIVATE
         ${ROOT}/third-party/fmt/include
     )
+    target_link_directories(torchcomms PRIVATE ${CONDA_LIB})
     target_link_libraries(torchcomms PRIVATE
         "-l:libglog.a"
         "-l:libgflags.a"

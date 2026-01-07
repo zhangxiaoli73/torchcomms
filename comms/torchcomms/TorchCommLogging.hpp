@@ -2,6 +2,11 @@
 
 #pragma once
 
+// Include standard library headers before glog to ensure proper definitions
+#include <ctime>
+#include <string>
+#include <string_view>
+
 #include <fmt/core.h>
 
 // Define this before including glog to avoid macro conflicts

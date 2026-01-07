@@ -2,8 +2,14 @@
 
 #pragma once
 
+#include <ctime>
 #include <cuda.h>
 #include <cuda_runtime.h>
+
+#ifndef GLOG_NO_ABBREVIATED_SEVERITIES
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#endif
+
 #include <glog/logging.h>
 #include "comms/ctran/interfaces/IBootstrap.h" // @manual
 

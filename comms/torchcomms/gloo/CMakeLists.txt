@@ -27,17 +27,21 @@ target_include_directories(torchcomms_comms_gloo PRIVATE
     ${gloo_SOURCE_DIR}
 )
 target_compile_features(torchcomms_comms_gloo PRIVATE cxx_std_20)
-target_link_directories(torchcomms_comms_gloo PRIVATE ${CONDA_LIB})
 target_link_libraries(torchcomms_comms_gloo PRIVATE
     ${TORCH_LIBRARIES}
     ${TORCH_PYTHON_LIB}
     torchcomms
 )
 if(USE_SYSTEM_LIBS)
-    target_link_libraries(torchcomms_comms_gloo PRIVATE
-        "-lfmt"
-    )
+    # Use CMake target for fmt if available
+    if(TARGET fmt::fmt)
+        target_link_libraries(torchcomms_comms_gloo PRIVATE fmt::fmt)
+    else()
+        target_link_directories(torchcomms_comms_gloo PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms_comms_gloo PRIVATE "-lfmt")
+    endif()
 else()
+    target_link_directories(torchcomms_comms_gloo PRIVATE ${CONDA_LIB})
     target_link_libraries(torchcomms_comms_gloo PRIVATE
         "-l:libfmt.a"
     )

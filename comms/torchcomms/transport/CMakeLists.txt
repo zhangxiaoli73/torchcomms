@@ -102,7 +102,6 @@ if(USE_INTEL_GPU AND LEVEL_ZERO_INCLUDE_DIR)
     target_include_directories(torchcomms_transport PRIVATE ${LEVEL_ZERO_INCLUDE_DIR})
 endif()
 target_compile_features(torchcomms_transport PRIVATE cxx_std_20)
-target_link_directories(torchcomms_transport PRIVATE ${CONDA_LIB})
 target_link_libraries(torchcomms_transport PRIVATE
     ${TORCH_LIBRARIES}
     ${TORCH_PYTHON_LIB}
@@ -112,16 +111,38 @@ target_link_libraries(torchcomms_transport PRIVATE
 )
 
 if(USE_SYSTEM_LIBS)
+    # Use CMake targets for dependencies when available
+    if(TARGET glog::glog)
+        target_link_libraries(torchcomms_transport PRIVATE glog::glog)
+    else()
+        target_link_directories(torchcomms_transport PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms_transport PRIVATE "-lglog")
+    endif()
+
+    if(TARGET gflags::gflags)
+        target_link_libraries(torchcomms_transport PRIVATE gflags::gflags)
+    else()
+        target_link_directories(torchcomms_transport PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms_transport PRIVATE "-lgflags")
+    endif()
+
+    if(TARGET fmt::fmt)
+        target_link_libraries(torchcomms_transport PRIVATE fmt::fmt)
+    else()
+        target_link_directories(torchcomms_transport PRIVATE ${CONDA_LIB})
+        target_link_libraries(torchcomms_transport PRIVATE "-lfmt")
+    endif()
+
+    # Link other system libraries
+    target_link_directories(torchcomms_transport PRIVATE ${CONDA_LIB})
     target_link_libraries(torchcomms_transport PRIVATE
         "-lfolly"
-        "-lgflags"
-        "-lglog"
         "-lboost_program_options"
         "-lboost_filesystem"
         "-lboost_context"
-        "-lfmt"
     )
 else()
+    target_link_directories(torchcomms_transport PRIVATE ${CONDA_LIB})
     target_link_libraries(torchcomms_transport PRIVATE
         "-l:libfolly.a"
         "-l:libgflags.a"
