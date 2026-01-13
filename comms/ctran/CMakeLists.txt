@@ -63,6 +63,9 @@ if(USE_INTEL_GPU)
     list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/RMA/.*\\.cc$")
     list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/algos/CudaGraphUtilsImpl\\.cc$")
 
+    # Exclude tracing files that depend on folly (CPUWaitEvent, CudaWaitEvent)
+    list(FILTER CTRAN_SOURCES EXCLUDE REGEX ".*/tracing/.*\\.cc$")
+
     message(STATUS "Excluding CUDA-dependent collective kernel files from ctran for Intel GPU build")
 endif()
 
@@ -126,6 +129,24 @@ target_include_directories(ctran PRIVATE
     ${ROOT}
     ${CONDA_INCLUDE}
 )
+
+# Try to find folly headers
+if(DEFINED ENV{CONDA_PREFIX})
+    find_path(FOLLY_INCLUDE_DIR
+        NAMES folly/dynamic.h
+        PATHS
+            $ENV{CONDA_PREFIX}/include
+            ${TORCH_INSTALL_PREFIX}/include
+            ${TORCH_INSTALL_PREFIX}/../include
+        NO_DEFAULT_PATH
+    )
+    if(FOLLY_INCLUDE_DIR)
+        message(STATUS "Found folly headers for ctran: ${FOLLY_INCLUDE_DIR}")
+        target_include_directories(ctran PRIVATE ${FOLLY_INCLUDE_DIR})
+    else()
+        message(WARNING "folly headers not found for ctran, some features may not compile")
+    endif()
+endif()
 
 if(NOT USE_INTEL_GPU)
     target_include_directories(ctran PRIVATE ${CUDA_INCLUDE_DIRS})
